@@ -6,6 +6,29 @@ History
 Pending Release
 ---------------
 
+.. Insert new release notes below this line
+
+* Drop Python 2 support, only Python 3.5+ is supported now. Python 3.4 was
+  dropped as it has reached its end of life.
+
+1.5.0 (2019-02-15)
+------------------
+
+* Support cases where the function or class name is not in the freevars. This
+  allows patching ``__init__`` of a class, or patching a recursive module-level
+  function.
+* Support patching objects provided by dotted path string.
+
+1.4.0 (2017-05-13)
+------------------
+
+* Added new function ``patchy.replace()``, that can be used to directly assign
+  new source code to a function, without having to make a patch.
+
+1.3.2 (2017-03-13)
+------------------
+
+* Support freevars and methods that call mangled methods.
 
 1.3.1 (2016-05-24)
 ------------------
@@ -14,7 +37,6 @@ Pending Release
 * Fixed install instruction in README.
 * Added ``patchy.mc_patchface()`` as an alias for ``patchy.patch()`` because
   memes.
-
 
 1.3.0 (2015-12-09)
 ------------------
@@ -36,7 +58,6 @@ Pending Release
   is being patched
 * Added ``unpatch`` method
 * Added ``temp_patch`` context manager/decorator
-
 
 1.0.0 (2015-06-09)
 ---------------------

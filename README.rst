@@ -8,15 +8,17 @@ Patchy
 .. image:: https://img.shields.io/pypi/v/patchy.svg
         :target: https://pypi.python.org/pypi/patchy
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/python/black
+
 .. figure:: https://raw.github.com/adamchainz/patchy/master/pirate.png
    :alt: A patchy pirate.
 
 ..
 
-Patch the source of python functions at runtime (not monkey-patching - actual
-patch-patching).
+Patch the inner source of python functions at runtime.
 
-A quick example:
+A quick example, making a function that returns 1 instead return 9001:
 
 .. code-block:: python
 
@@ -31,6 +33,11 @@ A quick example:
     >>> sample()
     9001
 
+Patchy works by replacing the code attribute of the function, leaving the
+function object itself the same. It's thus more versatile than monkey patching,
+since if the function has been imported in multiple places they'll also call
+the new behaviour.
+
 
 Installation
 ============
@@ -41,8 +48,14 @@ Use **pip**:
 
     pip install patchy
 
-Tested on Python 2.7, 3.4, and 3.5.
+Requirements
+============
 
+Tested with all combinations of:
+
+* Python: 3.5, 3.6, 3.7
+
+Python 3.5+ supported.
 
 Why?
 ====
@@ -96,7 +109,9 @@ API
 ``patch(func, patch_text)``
 ---------------------------
 
-Apply the patch ``patch_text`` to the source of function ``func``.
+Apply the patch ``patch_text`` to the source of function ``func``. ``func`` may
+be either a function, or a string providing the dotted path to import a
+function.
 
 If the patch is invalid, for example the context lines don’t match,
 ``ValueError`` will be raised, with a message that includes all the output from
@@ -160,8 +175,8 @@ Example:
 ``temp_patch(func, patch_text)``
 --------------------------------
 
-Usable as a context manager or function decorator to wrap code with a call to
-``patch`` before and ``unpatch`` after.
+Takes the same arguments as ``patch``. Usable as a context manager or function
+decorator to wrap code with a call to ``patch`` before and ``unpatch`` after.
 
 Context manager example:
 
@@ -189,6 +204,51 @@ Decorator example, using the same ``sample`` and ``patch_text``:
         return sample() == 5678
 
     print(my_func())  # prints True
+
+
+``replace(func, expected_source, new_source)``
+----------------------------------------------
+
+Check that function or dotted path to function ``func`` has an AST matching
+`expected_source``, then replace its inner code object with source compiled
+from ``new_source``. If the AST check fails, ``ValueError`` will be raised with
+current/expected source code in the message. In the author's opinion it's
+preferable to call ``patch()`` so your call makes it clear to see what is being
+changed about ``func``, but using ``replace()`` is simpler as you don't have to
+make a patch and there is no subprocess call to the ``patch`` utility.
+
+Note both ``expected_source`` and ``new_source`` will be
+``textwrap.dedent()``’ed, so the best way to include their source is with a
+triple quoted string with a backslash escape on the first line, as per the
+example below.
+
+If you want, you can pass ``expected_source=None`` to avoid the guard against
+your target changing, but this is highly unrecommended as it means if the
+original function changes, the call to ``replace()`` will continue to silently
+succeed.
+
+Example:
+
+.. code-block:: python
+
+    import patchy
+
+    def sample():
+        return 1
+
+    patchy.replace(
+        sample,
+        """\
+        def sample():
+            return 1
+        """,
+        """\
+        def sample():
+            return 42
+        """
+    )
+
+    print(sample())  # prints 42
 
 
 How to Create a Patch
